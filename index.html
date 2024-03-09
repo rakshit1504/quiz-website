@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Conduction Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #240A34;
+        }
+
+        header {
+            background-color: #891652;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-family: "Dancing Script", cursive;
+        }
+
+        main {
+            margin: 20px;
+            
+        }
+
+        .content{
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            color:white;
+
+        }
+
+        form {
+            padding: 20px;
+            
+
+            
+            
+        }
+
+        input,
+        select {
+            background: rgba(255, 255, 255, 0.3);
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            display: inline-block;
+            border: none;
+            box-sizing: border-box;
+            border-radius: 15px;
+            color: white;
+        }
+
+        button {
+            background-color: #EABE6C;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .quiz-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            margin-bottom: 10px;
+        }
+
+        .options {
+            margin-top: 10px;
+        }
+
+        .result-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            background-color: #891652;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Make your quiz here!</h1>
+    </header>
+
+    <main>
+        <div class="content">
+            <form id="quizCreationForm" onsubmit="event.preventDefault(); submitQuizCreationForm(event);">
+                <label for="quizTitle">Quiz Title:</label>
+                <input type="text" id="quizTitle" name="quizTitle" required>
+
+                <div id="questionsContainer">
+                    <div class="question">
+                        <label for="question1">Question 1:</label>
+                        <input type="text" id="question1" name="question1" required>
+                        <div id="optionsContainer1">
+                            <label for="options1">Options:</label>
+                            <input type="text" id="options1" name="options1" 
+                                required>
+                        </div>
+                        <button type="button" onclick="addOption(1)">Add Option</button>
+                    </div>
+                </div>
+
+                <button type="button" onclick="addQuestion()">Add Question</button>
+                <button type="submit">Create Quiz</button>
+            </form>
+
+            <div class="quiz-container" id="quizContainer" style="display: none;">
+                <div id="questionDisplay" class="question"></div>
+                <div id="optionsDisplay" class="options"></div>
+                <button onclick="submitAnswer()">Submit Answer</button>
+            </div>
+
+            <div class="result-container" id="resultContainer" style="display: none;">
+                <h2>Your Quiz Result</h2>
+                <p id="scoreDisplay"></p>
+                <p id="correctAnswersDisplay"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; Rakshit Bansal 2024
+    </footer>
+
+    <script>
+        
+        let quizData = {
+            title: "",
+            questions: [],
+        };
+
+        
+        function addQuestion() {
+            const questionContainer = document.getElementById("questionsContainer");
+            const questionNumber = questionContainer.getElementsByClassName("question").length + 1;
+
+            const questionDiv = document.createElement("div");
+            questionDiv.classList.add("question");
+
+            questionDiv.innerHTML = `
+        <label for="question${questionNumber}">Question ${questionNumber}:</label>
+        <input type="text" id="question${questionNumber}" name="question${questionNumber}" required>
+        <div id="optionsContainer${questionNumber}">
+            <label for="option1">Option 1:</label>
+            <input type="text" id="option1" name="option1" required>
+        </div>
+        <button type="button" onclick="addOption(${questionNumber})">Add Option</button>
+    `;
+
+            questionContainer.appendChild(questionDiv);
+        }
+
+        
+        function addOption(questionNumber) {
+            const optionsContainer = document.getElementById(`optionsContainer${questionNumber}`);
+            const optionNumber = optionsContainer.getElementsByTagName("input").length;
+
+            if (optionNumber >= 4) {
+                alert("You cannot add more than 4 options.");
+                return;
+            }
+
+            const optionDiv = document.createElement("div");
+            optionDiv.innerHTML = `
+        <label for="option${optionNumber + 1}">Option ${optionNumber + 1}:</label>
+        <input type="text" id="option${optionNumber + 1}" name="option${optionNumber + 1}" required>
+    `;
+
+            optionsContainer.appendChild(optionDiv);
+        }
+
+        function submitQuizCreationForm(event) {
+            event.preventDefault();
+
+            quizData.title = document.getElementById("quizTitle").value;
+
+            const questionElements = document.querySelectorAll(".question");
+            questionElements.forEach((questionElement, index) => {
+                const questionText = questionElement.querySelector(`#question${index + 1}`).value;
+                const optionsText = questionElement.querySelector(`#options${index + 1}`).value.split(',').map(option => option.trim());
+
+                quizData.questions.push({
+                    question: questionText,
+                    options: optionsText,
+                });
+            });
+
+            document.getElementById("quizContainer").style.display = "block";
+            document.getElementById("quizCreationForm").style.display = "none";
+
+            displayNextQuestion();
+        }
+
+        function displayNextQuestion() {
+            const questionDisplay = document.getElementById("questionDisplay");
+            const optionsDisplay = document.getElementById("optionsDisplay");
+
+            const currentQuestionIndex = quizData.questions.length - 1;
+
+            questionDisplay.innerText = `Q${currentQuestionIndex + 1}: ${quizData.questions[currentQuestionIndex].question}`;
+
+            optionsDisplay.innerHTML = "";
+            quizData.questions[currentQuestionIndex].options.forEach((option, index) => {
+                const optionButton = document.createElement("button");
+                optionButton.innerText = option;
+                optionButton.onclick = () => selectAnswer(index);
+                optionsDisplay.appendChild(optionButton);
+            });
+        }
+
+        function selectAnswer(selectedOptionIndex) {
+            quizData.questions[quizData.questions.length - 1].userAnswer = selectedOptionIndex;
+
+            if (quizData.questions.length < quizData.questions.length) {
+                displayNextQuestion();
+            } else {
+                displayQuizResult();
+            }
+        }
+
+        function displayQuizResult() {
+            const resultContainer = document.getElementById("resultContainer");
+            const scoreDisplay = document.getElementById("scoreDisplay");
+            const correctAnswersDisplay = document.getElementById("correctAnswersDisplay");
+
+            const score = calculateScore();
+            scoreDisplay.innerText = `Your Score: ${score}/${quizData.questions.length}`;
+
+            const correctAnswers = quizData.questions.map((question, index) => {
+                const correctOption = quizData.questions[index].options[quizData.questions[index].userAnswer];
+                return `Q${index + 1}: ${correctOption}`;
+            });
+            correctAnswersDisplay.innerText = `Correct Answers:\n${correctAnswers.join("\n")}`;
+
+            document.getElementById("quizContainer").style.display = "none";
+            resultContainer.style.display = "block";
+        }
+
+        function calculateScore() {
+            return quizData.questions.filter(question => question.userAnswer === question.correctAnswer).length;
+        }
+
+        document.getElementById("quizCreationForm").addEventListener("submit", submitQuizCreationForm);
+
+        document.getElementById("addQuestionBtn").addEventListener("click", addQuestion);
+    </script>
+
+    <footer>
+        &copy; 2024 Quiz Conduction Website
+    </footer>
+
+</body>
+
+</html>
